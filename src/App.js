@@ -7,6 +7,32 @@ import './App.css'
 // class Shelf;
 // class BooksApp;
 
+class BookView extends React.Component {
+  render() {
+    return (
+      <li key={this.props.book.id}>{this.props.book.title} - {this.props.book.shelf}</li>
+    )
+  } 
+}
+
+class ShelfView extends React.Component {
+  render() {
+    console.log(this.props);
+    return (
+      <div>
+        <span>{this.props.shelf_name} - {this.props.books.length}</span>
+      
+      <ul className='all-shelfs'>
+      {this.props.books.filter(book => book.shelf===this.props.shelf_name).map((book) => (
+        // <li key={book.id}>{book.title} - {book.shelf}</li>
+        <BookView book={book} />
+      ))}
+    </ul>
+    </div>
+    )
+  }
+} 
+
 class BooksApp extends React.Component {
   /* Initial propTypes */
   state = {
@@ -24,10 +50,13 @@ class BooksApp extends React.Component {
     let app = this;
     console.log("well, actually here");
     BooksAPI.getAll().then(function(books) {
+    // BooksAPI.search("linux").then(function(books) {
       console.log("here");
       console.log(books);
       console.log(app);
-      app.setState({all_books : books});
+      if (!books.error) {
+        app.setState({all_books : books});
+      }
     });
   }
   
@@ -37,13 +66,9 @@ class BooksApp extends React.Component {
     
     return (
       <div>
-        <span>all shelves</span>
-      {/* <li>{this.state.all_books.length}</li> */}
-      <ol className='all-shelfs'>
-        {this.state.all_books.map((book) => (
-          <li key={book.id}>{book.title} - {book.shelf}</li>
-        ))}
-      </ol>
+        <ShelfView shelf_name='currentlyReading' books={this.state.all_books} />      
+        <ShelfView shelf_name='wantToRead' books={this.state.all_books} />
+        <ShelfView shelf_name='read' books={this.state.all_books} />  
       </div>
     )
   }

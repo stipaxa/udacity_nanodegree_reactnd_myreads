@@ -10,14 +10,25 @@ class BookView extends React.Component {
     this.props.app.changeShelf(this.props.book.id, e.target.value);
   }
 
+  onFocus(e) {
+    console.log('selected');
+    // const el = this.refs[charger];
+    console.log(e.refs["charger"]);
+    // this.setState({value: el.target.value});
+    // el.value = {this.props.book.shelf};
+    // $('#charger').val(this.props.book.shelf);
+    document.getElementById('charger').value = this.props.book.shelf;
+  }
+
   render() {
     return (
+      <li>
       <div className="book">
         <div className="book-top">
-        {/* <div className="book-cover" style={{width: 128, height: 193, backgroundImage: "url(" + this.props.book.imageLinks.smallThumbnail + ")"}}></div> */}
-          <li>{this.props.book.title} - {this.props.book.shelf}</li>
+        <div className="book-cover" style={{width: 128, height: 193, backgroundImage: "url(" + this.props.book.imageLinks.smallThumbnail + ")"}}></div>
           <div className="book-shelf-changer">
-          <select onChange={e => this.changeShelf(e)}>
+          {/* <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} onFocus={this.onFocus(this)} > */}
+          <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} value={this.props.book.shelf} >
             <option value="move" disabled>Move to...</option>
             <option value="currentlyReading">Currently Reading</option>
             <option value="wantToRead">Want to Read</option>
@@ -26,7 +37,10 @@ class BookView extends React.Component {
           </select>
           </div>
         </div>
+        <div className="book-title">{this.props.book.title}</div>
+        <div className="book-authors">{this.props.book.authors}</div>
       </div>
+      </li>
     )
   } 
 }
@@ -34,14 +48,15 @@ class BookView extends React.Component {
 class ShelfView extends React.Component {
   render() {
     return (
-      <div>
-        <span>{this.props.shelf_name} - {this.props.books.length}</span>
-        
-        <ul className='all-shelfs'>
-          {this.props.books.filter(book => book.shelf===this.props.shelf_name).map((book) => (
-            <BookView key={book.id} book={book} app={this.props.app}/>
-          ))}
-        </ul> 
+      <div className="bookshelf">
+        <h2 className="bookshelf-title">{this.props.shelf_name}</h2>
+        <div className="bookshelf-books">
+          <ol className="books-grid">
+            {this.props.books.filter(book => book.shelf===this.props.shelf_name).map((book) => (
+              <BookView key={book.id} book={book} app={this.props.app}/>
+            ))}
+          </ol>
+        </div>
       </div>
     )
   }
@@ -50,15 +65,8 @@ class ShelfView extends React.Component {
 class BooksApp extends React.Component {
   /* Initial propTypes */
   state = {
-    /**
-     * TODO: Instead of using this state variable to keep track of which page
-     * we're on, use the URL in the browser's address bar. This will ensure that
-     * users can use the browser's back and forward buttons to navigate between
-     * pages, as well as provide a good URL they can bookmark and share.
-     */
-
       all_books: []
-    }
+  }
 
   changeShelf(book_id, shelf) {
     let books = [];
@@ -66,7 +74,8 @@ class BooksApp extends React.Component {
     for( let i = 0; i < this.state.all_books.length; i++ ) {
       books[i] = this.state.all_books[i];
       if( books[i].id === book_id ) {
-        books[i].shelf = shelf;        
+        books[i].shelf = shelf;      
+        BooksAPI.update(books[i], shelf);  
       }
     }
     this.setState({all_books: books});
@@ -91,10 +100,17 @@ class BooksApp extends React.Component {
     console.log("render BooksApp");
     
     return (
-      <div>
-        <ShelfView shelf_name="currentlyReading" books={this.state.all_books} app={this}/>      
-        <ShelfView shelf_name="wantToRead" books={this.state.all_books} app={this}/>
-        <ShelfView shelf_name="read" books={this.state.all_books} app={this}/>  
+      <div className="list-books">
+        <div className="list-books-title">
+          <h1>MyReads</h1>
+        </div>
+        <div className="list-books-content">
+          <div>
+              <ShelfView shelf_name="currentlyReading" books={this.state.all_books} app={this}/>      
+              <ShelfView shelf_name="wantToRead" books={this.state.all_books} app={this}/>
+              <ShelfView shelf_name="read" books={this.state.all_books} app={this}/>
+          </div>
+        </div>
       </div>
     )
   }

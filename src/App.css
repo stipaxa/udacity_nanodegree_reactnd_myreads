@@ -119,9 +119,9 @@ body, .app {
   text-align: left;
 }
 
-.book {
+/* .book {
   width: 140px;
-}
+} */
 .book-title,
 .book-authors {
   font-size: 0.8em;
@@ -135,7 +135,7 @@ body, .app {
 
 .book-top {
   position: relative;
-  height: 200px;
+  /* height: 200px; */
   display: flex;
   align-items: flex-end;
 }

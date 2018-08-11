@@ -1,5 +1,6 @@
 import React from 'react'
 // import escapeRegExp from 'escape-string-regexp'
+import {Route} from 'react-router-dom'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
 
@@ -10,25 +11,18 @@ class BookView extends React.Component {
     this.props.app.changeShelf(this.props.book.id, e.target.value);
   }
 
-  onFocus(e) {
-    console.log('selected');
-    // const el = this.refs[charger];
-    console.log(e.refs["charger"]);
-    // this.setState({value: el.target.value});
-    // el.value = {this.props.book.shelf};
-    // $('#charger').val(this.props.book.shelf);
-    document.getElementById('charger').value = this.props.book.shelf;
-  }
-
-  render() {
+  render() { 
     return (
       <li>
       <div className="book">
         <div className="book-top">
-        <div className="book-cover" style={{width: 128, height: 193, backgroundImage: "url(" + this.props.book.imageLinks.smallThumbnail + ")"}}></div>
+        {this.props.book.imageLinks ? (
+          <div className="book-cover" style={{width: 128, height: 193, backgroundImage: "url(" + this.props.book.imageLinks.smallThumbnail + ")"}}></div>
+        ) : (
+          <div className="book-cover" style={{width: 128, height: 193}}></div>
+        )}
           <div className="book-shelf-changer">
-          {/* <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} onFocus={this.onFocus(this)} > */}
-          <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} value={this.props.book.shelf} >
+          <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} defaultValue={this.props.book.shelf}>
             <option value="move" disabled>Move to...</option>
             <option value="currentlyReading">Currently Reading</option>
             <option value="wantToRead">Want to Read</option>
@@ -60,12 +54,26 @@ class ShelfView extends React.Component {
       </div>
     )
   }
-} 
+}
+
+class SearchResultView extends React.Component {
+  render() {
+    return (
+      <ol className="books-grid">
+        {this.props.books.filter(book => book.shelf==='').map((book) =>(
+          <BookView key={book.id} book={book} app={this.props.app}/>
+        ))}
+      </ol>
+    )
+  }
+}
 
 class BooksApp extends React.Component {
   /* Initial propTypes */
   state = {
-      all_books: []
+      all_books: [],
+      search_books: [],
+      showSearchPage: false
   }
 
   changeShelf(book_id, shelf) {
@@ -81,14 +89,37 @@ class BooksApp extends React.Component {
     this.setState({all_books: books});
   }
 
+  searchResult(e) {
+    let app = this;
+    if(e) {
+      BooksAPI.search(e).then(function(books) {
+        console.log(books);
+        if(Array.isArray(books)) {
+          books.map( book => book.shelf = "");
+          app.setState({search_books : books});
+        } else {
+          console.log('no result', books.error);
+          books = [];
+          app.setState({search_books : books});
+        }
+      })
+      .catch(function(error) {
+        console.log(error);
+        const books = [];
+        app.setState({search_books : books});
+      });
+    } else {
+      const books = [];
+      app.setState({search_books : books});
+    }
+  }
+
   componentWillMount() {
     let app = this;
     console.log("well, actually here");
     BooksAPI.getAll().then(function(books) {
-    // BooksAPI.search("linux").then(function(books) {
       console.log("here");
       console.log(books);
-      console.log(app);
       if (!books.error) {
         app.setState({all_books : books});
       }
@@ -100,17 +131,41 @@ class BooksApp extends React.Component {
     console.log("render BooksApp");
     
     return (
-      <div className="list-books">
-        <div className="list-books-title">
-          <h1>MyReads</h1>
-        </div>
-        <div className="list-books-content">
-          <div>
-              <ShelfView shelf_name="currentlyReading" books={this.state.all_books} app={this}/>      
-              <ShelfView shelf_name="wantToRead" books={this.state.all_books} app={this}/>
-              <ShelfView shelf_name="read" books={this.state.all_books} app={this}/>
+      <div className="app">
+        {/* {this.state.showSearchPage ? ( */}
+        <Route exact path="/search" render={() =>(
+          <div className="search-books">
+            <div className="search-books-bar">
+              <a className="close-search" onClick={() => this.setState({ showSearchPage: false })}>Close</a>
+              <div className="search-books-input-wrapper">
+                  <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={e => this.searchResult(e.target.value)} />
+              </div>
+            </div>
+            <div className="search-books-results">
+                {/* <ShelfView shelf_name="" books={this.state.search_books} app={this} /> */}
+                <SearchResultView books={this.state.search_books} app={this} />
+            </div>
           </div>
-        </div>
+        )}/>
+        {/* ) : (  */}
+        <Route exact path="/" render={()=>(
+          <div className="list-books">
+            <div className="list-books-title">
+              <h1>MyReads</h1>
+            </div>
+            <div className="list-books-content">
+              <div>
+                  <ShelfView shelf_name="currentlyReading" books={this.state.all_books} app={this}/>      
+                  <ShelfView shelf_name="wantToRead" books={this.state.all_books} app={this}/>
+                  <ShelfView shelf_name="read" books={this.state.all_books} app={this}/>
+              </div>
+            </div>
+            <div className="open-search">
+                <a onClick={() => this.setState({ showSearchPage: true })}>Add a book</a>
+            </div>
+          </div>
+      )}/>
+      {/* )} */}
       </div>
     )
   }

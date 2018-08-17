@@ -1,6 +1,7 @@
 import React from 'react'
 // import escapeRegExp from 'escape-string-regexp'
-import {Route} from 'react-router-dom'
+import {Route, Link} from 'react-router-dom'
+import PropTypes from 'prop-types'
 import * as BooksAPI from './BooksAPI'
 import './App.css'
 
@@ -9,6 +10,11 @@ class BookView extends React.Component {
   changeShelf(e) {
     console.log(this.props.book.id, e.target.value);
     this.props.app.changeShelf(this.props.book.id, e.target.value);
+  }
+
+  addBook(e) {
+    console.log(this.props.book.id, e.target.value);
+    this.props.app.addBook(this.props.book.id, e.target.value);
   }
 
   render() { 
@@ -22,13 +28,23 @@ class BookView extends React.Component {
           <div className="book-cover" style={{width: 128, height: 193}}></div>
         )}
           <div className="book-shelf-changer">
-          <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} defaultValue={this.props.book.shelf}>
-            <option value="move" disabled>Move to...</option>
-            <option value="currentlyReading">Currently Reading</option>
-            <option value="wantToRead">Want to Read</option>
-            <option value="read">Read</option>
-            <option value="none">None</option>
+          {this.props.book.shelf ? ( 
+            <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} defaultValue={this.props.book.shelf}>
+              <option value="move" disabled>Move to...</option>
+              <option value="currentlyReading">Currently Reading</option>
+              <option value="wantToRead">Want to Read</option>
+              <option value="read">Read</option>
+              <option value="none">None</option>
           </select>
+          ) : (
+            <select name="charger" ref="charger" onChange={e=>this.addBook(e)} defaultValue={this.props.book.shelf}>
+              <option value="move" disabled>Move to...</option>
+              <option value="currentlyReading">Currently Reading</option>
+              <option value="wantToRead">Want to Read</option>
+              <option value="read">Read</option>
+              <option value="none">None</option>
+          </select>
+          )} 
           </div>
         </div>
         <div className="book-title">{this.props.book.title}</div>
@@ -73,7 +89,7 @@ class BooksApp extends React.Component {
   state = {
       all_books: [],
       search_books: [],
-      showSearchPage: false
+      query: ''
   }
 
   changeShelf(book_id, shelf) {
@@ -89,28 +105,46 @@ class BooksApp extends React.Component {
     this.setState({all_books: books});
   }
 
-  searchResult(e) {
+  addBook(book_id, shelf) {
+    console.log(book_id, shelf);
+
+    let books = [];
+    for( let i = 0; i < this.state.search_books.length; i++ ) {
+      books[i] = this.state.search_books[i];
+      if( books[i].id === book_id && shelf != 'none') {
+        books[i].shelf = shelf;      
+        this.state.all_books.push(books[i]);
+        BooksAPI.update(books[i], shelf);  
+      }
+    }
+    this.setState({all_books: books});
+  }
+
+  searchBooks = (query) => {
+    this.setState({query: query.trim()});
     let app = this;
-    if(e) {
-      BooksAPI.search(e).then(function(books) {
-        console.log(books);
+    let books = [];
+    if(query) {
+      BooksAPI.search(query).then(function(books) {
         if(Array.isArray(books)) {
-          books.map( book => book.shelf = "");
-          app.setState({search_books : books});
+          console.log(books);
+          books.filter(book => !book.shelf).map( book => book.shelf = "");
+          app.setState({search_books : books, query: query});
         } else {
           console.log('no result', books.error);
           books = [];
-          app.setState({search_books : books});
+          app.setState({search_books : books, query: query});
         }
       })
       .catch(function(error) {
         console.log(error);
-        const books = [];
-        app.setState({search_books : books});
+        books = [];
+        app.setState({search_books : books, query: query});
       });
+      console.log("query = ", query);      
     } else {
-      const books = [];
-      app.setState({search_books : books});
+      books = [];
+      app.setState({search_books : books, query: query});
     }
   }
 
@@ -119,26 +153,34 @@ class BooksApp extends React.Component {
     console.log("well, actually here");
     BooksAPI.getAll().then(function(books) {
       console.log("here");
-      console.log(books);
       if (!books.error) {
         app.setState({all_books : books});
       }
     });
   }
   
-
   render() {
     console.log("render BooksApp");
-    
+    console.log("start books", this.state.all_books);
+    // let search_b = [];
+    // BooksAPI.search('Lit').then(function(search_b){
+    //   console.log("search_b", search_b);
+    // });
+
+    // return (
+    //   <div>Hello</div>
+    // )
+
     return (
       <div className="app">
-        {/* {this.state.showSearchPage ? ( */}
-        <Route exact path="/search" render={() =>(
+        <Route path="/search" render={()=>(
           <div className="search-books">
             <div className="search-books-bar">
-              <a className="close-search" onClick={() => this.setState({ showSearchPage: false })}>Close</a>
+              <Link to="/" className="close-search">Close</Link>
               <div className="search-books-input-wrapper">
-                  <input type="text" placeholder="Search by title or author" value={this.state.query} onChange={e => this.searchResult(e.target.value)} />
+                  <input type="text" placeholder="Search by title or author" 
+                    value={this.state.query} 
+                    onChange={(e) => this.searchBooks(e.target.value)} />
               </div>
             </div>
             <div className="search-books-results">
@@ -147,7 +189,7 @@ class BooksApp extends React.Component {
             </div>
           </div>
         )}/>
-        {/* ) : (  */}
+
         <Route exact path="/" render={()=>(
           <div className="list-books">
             <div className="list-books-title">
@@ -161,13 +203,12 @@ class BooksApp extends React.Component {
               </div>
             </div>
             <div className="open-search">
-                <a onClick={() => this.setState({ showSearchPage: true })}>Add a book</a>
+              <Link to="/search">add a book</Link>
             </div>
           </div>
-      )}/>
-      {/* )} */}
+        )}/>
       </div>
-    )
+    ) 
   }
 }
 

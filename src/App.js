@@ -4,6 +4,7 @@ import * as BooksAPI from './BooksAPI'
 import ShelfView from './ShelfView'
 import SearchResultView from './SearchResultView'
 import './App.css'
+import Switch from 'react-router-dom/Switch';
 
 class BooksApp extends React.Component {
   /* Initial propTypes */
@@ -11,7 +12,6 @@ class BooksApp extends React.Component {
       all_books: [],
       search_books: [],
       query: ''
-      // place_holder: "url(placeHolder.png)"
   }
 
   changeShelf(book_id, shelf) {
@@ -30,12 +30,13 @@ class BooksApp extends React.Component {
   addBook(book_id, shelf) {
     console.log("add book", book_id, shelf);
 
-    let books = [];
+    let books = this.state.all_books;
     for( let i = 0; i < this.state.search_books.length; i++ ) {
-      books[i] = this.state.search_books[i];
-      if( books[i].id === book_id) {
-        books[i].shelf = shelf;
-        BooksAPI.update(books[i], shelf);  
+      const a_book = this.state.search_books[i];
+      if( a_book.id === book_id) {
+        a_book.shelf = shelf;
+        books.push(a_book);
+        BooksAPI.update(a_book, shelf);  
       }
     }
     this.setState({all_books: books});
@@ -68,8 +69,7 @@ class BooksApp extends React.Component {
       app.setState({search_books : books, query: query});
     }
   }
-
-  componentWillMount() {
+  componentDidMount() {
     let app = this;
     console.log("well, actually here");
     BooksAPI.getAll().then(function(books) {
@@ -86,6 +86,7 @@ class BooksApp extends React.Component {
 
     return (
       <div className="app">
+      <Switch>
         <Route path="/search" render={()=>(
           <div className="search-books">
             <div className="search-books-bar">
@@ -102,7 +103,7 @@ class BooksApp extends React.Component {
           </div>
         )}/>
 
-        <Route exact path="/" render={()=>(
+        <Route exact path="/" render={() => (
           <div className="list-books">
             <div className="list-books-title">
               <h1>MyReads</h1>
@@ -119,6 +120,7 @@ class BooksApp extends React.Component {
             </div>
           </div>
         )}/>
+        </Switch>
       </div>
     ) 
   }

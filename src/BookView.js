@@ -1,5 +1,4 @@
 import React from 'react'
-import PlaceHolder from './placeHolder.png'
 
 class BookView extends React.Component {
 
@@ -14,8 +13,6 @@ class BookView extends React.Component {
     }
   
     render() { 
-      const place_holder = './placeHolder.png';
-        
       return (
         <li>
         <div className="book">

@@ -50,7 +50,16 @@ class BooksApp extends React.Component {
       BooksAPI.search(query).then(function(books) {
         if(Array.isArray(books)) {
           console.log(books);
-          books.filter(book => !book.shelf).map( book => book.shelf = "none");
+          books.filter(book => !book.shelf).map(book => book.shelf = "none");          
+          for( let i = 0; i < books.length; i++ ) {
+            for(let j = 0; j < app.state.all_books.length; j++ )
+            {
+              const a_book = app.state.all_books[j];
+              if(books[i].id === a_book.id) {
+                books[i].shelf = a_book.shelf;
+              }
+            }
+          }
           app.setState({search_books : books, query: query});
         } else {
           console.log('no result', books.error);
@@ -69,6 +78,7 @@ class BooksApp extends React.Component {
       app.setState({search_books : books, query: query});
     }
   }
+
   componentDidMount() {
     let app = this;
     console.log("well, actually here");

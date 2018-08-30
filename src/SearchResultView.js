@@ -8,7 +8,7 @@ class SearchResultView extends React.Component {
           <div>
         {this.props.books.length ? (
             <ol className="books-grid">
-              {this.props.books.filter(book => book.shelf==='none').map((book) =>(
+              {this.props.books.map((book) =>(
                 <BookView key={book.id} book={book} app={this.props.app}/>
               ))}
             </ol>

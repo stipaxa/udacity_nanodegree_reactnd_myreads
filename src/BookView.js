@@ -24,7 +24,7 @@ class BookView extends React.Component {
           )}
             <div className="book-shelf-changer">
             {this.props.book.shelf !== "none" ? ( 
-              <select name="charger" ref="charger" onChange={e=>this.changeShelf(e)} defaultValue={this.props.book.shelf}>
+              <select name="chargerC" ref="charger" className="selectpicker" onChange={e=>this.changeShelf(e)} defaultValue={this.props.book.shelf}>
                 <option value="move" disabled>Move to...</option>
                 <option value="currentlyReading">Currently Reading</option>
                 <option value="wantToRead">Want to Read</option>
@@ -32,7 +32,7 @@ class BookView extends React.Component {
                 <option value="none">None</option>
             </select>
             ) : (
-              <select name="charger" ref="charger" onChange={e=>this.addBook(e)} defaultValue={this.props.book.shelf}>
+              <select name="chargerA" ref="charger" className="selectpicker" onChange={e=>this.addBook(e)} defaultValue={this.props.book.shelf}>
                 <option value="move" disabled>Move to...</option>
                 <option value="currentlyReading">Currently Reading</option>
                 <option value="wantToRead">Want to Read</option>
